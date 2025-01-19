@@ -1,4 +1,5 @@
 sys-apps
 sys-block
+sys-fs
 sys-kernel
 virtual
