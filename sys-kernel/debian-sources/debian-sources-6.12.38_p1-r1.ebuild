@@ -5,12 +5,12 @@ EAPI=6
 
 inherit check-reqs eutils ego savedconfig
 
-SLOT=sid/6.16.3_p1
+SLOT=trixie/6.12.38_p1
 
 # NOTE: When updating: use the version from Debian testing (trixie)
 # https://packages.debian.org/trixie/linux-source
 DEB_PATCHLEVEL="1"
-KERNEL_TRIPLET="6.16.3"
+KERNEL_TRIPLET="6.12.38"
 
 # like "_p1-r1"
 #VERSION_SUFFIX="_p${DEB_PATCHLEVEL}"
@@ -34,7 +34,7 @@ DEB_PV="${KERNEL_TRIPLET}-${DEB_PATCHLEVEL}"
 
 RESTRICT="binchecks strip"
 LICENSE="GPL-2"
-KEYWORDS=""
+KEYWORDS="*"
 IUSE="acpi-ec binary btrfs custom-cflags dracut ec2 +logo luks lvm mdadm savedconfig sshd sign-modules zfs
 "
 
@@ -49,6 +49,7 @@ btrfs? ( sys-fs/btrfs-progs )
 zfs? ( sys-fs/zfs )
 luks? ( sys-fs/cryptsetup )
 lvm? ( sys-fs/lvm2 )
+mdadm? ( sys-fs/mdadm )
 "
 REQUIRED_USE="binary? (
   ^^ ( dracut )
@@ -64,8 +65,8 @@ sshd? ( binary )
 DESCRIPTION="Debian Sources (and optional binary kernel)"
 HOMEPAGE="https://packages.debian.org/unstable/kernel/"
 SRC_URI="
-https://deb.debian.org/debian/pool/main/l/linux/linux_6.16.3-1.debian.tar.xz -> linux_6.16.3-1.debian.tar.xz
-https://mirrors.edge.kernel.org/pub/linux/kernel/v6.x/linux-6.16.3.tar.xz -> linux-6.16.3.tar.xz"
+https://deb.debian.org/debian/pool/main/l/linux/linux_6.12.38-1.debian.tar.xz -> linux_6.12.38-1.debian.tar.xz
+https://mirrors.edge.kernel.org/pub/linux/kernel/v6.x/linux-6.12.38.tar.xz -> linux-6.12.38.tar.xz"
 S="$WORKDIR/linux-${KERNEL_TRIPLET}"
 
 
@@ -161,7 +162,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/latest/mcelog.patch || die
 
 	# patches for this particular branch
-	epatch "${FILESDIR}"/6.16+/more-ISA-levels-and-uarches-for-kernel-6.16+.patch || die
+	epatch "${FILESDIR}"/6.1.79+/more-ISA-levels-and-uarches-for-kernel-6.1.79+.patch || die
 
 	if use savedconfig; then
 		einfo Restoring saved .config ...
@@ -382,15 +383,18 @@ pkg_postinst() {
 	# Finally, generate a new initramfs with dracut, via whip
 	# NOTE: For now, the initramfs is generic.
 	if use binary && use dracut; then
-		DRACUT_ADD_MODULES="
+		dracut_modules_pre="
 			$(use lvm && echo lvm)
 			$(use luks && echo crypt)
-			$(use mdadm && echo dmraid)
+			$(use mdadm && echo mdraid)
 			$(use btrfs && echo btrfs)
 			$(use sshd && echo sshd)
-		" DRACUT_ADD_DRIVERS="
+		"
+		dracut_drivers_pre="
 			$(use luks && echo dm-crypt)
-		" \
+		"
+		DRACUT_ADD_MODULES="$(echo ${dracut_modules_pre} | xargs)" \
+		DRACUT_ADD_DRIVERS="$(echo ${dracut_drivers_pre} | xargs)" \
 		KVER="${KERN_ARCH}-${MACARONI_KVER}" \
 		KTYPE="${MACARONI_KTYPE}" \
 		KSUFFIX="${MACARONI_KSUFFIX}" \

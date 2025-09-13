@@ -5,12 +5,12 @@ EAPI=6
 
 inherit check-reqs eutils ego savedconfig
 
-SLOT=trixie/6.12.43_p1
+SLOT=bookworm/6.1.137_p1
 
 # NOTE: When updating: use the version from Debian testing (trixie)
 # https://packages.debian.org/trixie/linux-source
 DEB_PATCHLEVEL="1"
-KERNEL_TRIPLET="6.12.43"
+KERNEL_TRIPLET="6.1.137"
 
 # like "_p1-r1"
 #VERSION_SUFFIX="_p${DEB_PATCHLEVEL}"
@@ -64,8 +64,8 @@ sshd? ( binary )
 DESCRIPTION="Debian Sources (and optional binary kernel)"
 HOMEPAGE="https://packages.debian.org/unstable/kernel/"
 SRC_URI="
-https://deb.debian.org/debian/pool/main/l/linux/linux_6.12.43-1.debian.tar.xz -> linux_6.12.43-1.debian.tar.xz
-https://mirrors.edge.kernel.org/pub/linux/kernel/v6.x/linux-6.12.43.tar.xz -> linux-6.12.43.tar.xz"
+https://deb.debian.org/debian/pool/main/l/linux/linux_6.1.137-1.debian.tar.xz -> linux_6.1.137-1.debian.tar.xz
+https://mirrors.edge.kernel.org/pub/linux/kernel/v6.x/linux-6.1.137.tar.xz -> linux-6.1.137.tar.xz"
 S="$WORKDIR/linux-${KERNEL_TRIPLET}"
 
 
@@ -167,7 +167,7 @@ src_prepare() {
 		einfo Restoring saved .config ...
 		restore_config .config
 	else
-		cp "${FILESDIR}"/config-extract-6.6 ./config-extract || die
+		cp "${FILESDIR}"/config-extract-6.1 ./config-extract || die
 		chmod +x config-extract || die
 	fi
 
