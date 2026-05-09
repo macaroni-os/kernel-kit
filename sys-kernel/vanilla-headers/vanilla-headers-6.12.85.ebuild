@@ -30,7 +30,7 @@ pkg_setup() {
 src_prepare() {
 	default
 	# drop unused errno.h include
-	sed -e '/^#include <errno.h>/d' -i ${WORKDIR}/scripts/unifdef.c
+	sed -e '/^#include <errno.h>/d' -i ${S}/scripts/unifdef.c
 }
 src_compile() {
 	:
