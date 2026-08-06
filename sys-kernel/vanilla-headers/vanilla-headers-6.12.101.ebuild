@@ -21,7 +21,7 @@ BDEPEND="app-arch/xz-utils
 	!!sys-kernel/debian-headers
 	
 "
-DEPEND="!<sys-kernel/linux-headers-6.12
+DEPEND=">=sys-kernel/linux-headers-6.12
 	
 "
 S="${WORKDIR}/linux-${PV}"
