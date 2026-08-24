@@ -32,9 +32,7 @@ dracut? ( binary )
 sshd? ( binary )
 "
 RESTRICT="binchecks strip"
-BDEPEND="# Build-time only. Available from src_prepare through
-	# pkg_postinst, then dep-cleanable. Not needed at runtime.
-	virtual/libelf
+BDEPEND="virtual/libelf
 	sys-apps/gawk
 	binary? (
 		app-admin/whip
@@ -45,11 +43,7 @@ BDEPEND="# Build-time only. Available from src_prepare through
 	sign-modules? ( sys-apps/findutils )
 	
 "
-RDEPEND="# Root-filesystem managers: needed at RUNTIME to activate/manage
-	# the root (lvm/luks/raid/btrfs/zfs), so they persist with the
-	# package. Also required at build time for dracut initramfs
-	# generation (RDEPEND is available through pkg_postinst).
-	btrfs? ( sys-fs/btrfs-progs )
+RDEPEND="btrfs? ( sys-fs/btrfs-progs )
 	zfs? ( sys-fs/zfs )
 	luks? ( sys-fs/cryptsetup )
 	lvm? ( sys-fs/lvm2 )
