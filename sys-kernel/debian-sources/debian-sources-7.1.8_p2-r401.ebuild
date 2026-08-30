@@ -32,7 +32,9 @@ dracut? ( binary )
 sshd? ( binary )
 "
 RESTRICT="binchecks strip"
-BDEPEND="virtual/libelf
+BDEPEND="# Build-time only. Available from src_prepare through
+	# pkg_postinst, then dep-cleanable. Not needed at runtime.
+	virtual/libelf
 	sys-apps/gawk
 	binary? (
 		app-admin/whip
