@@ -46,6 +46,17 @@ src_configure() {
 	)
 	 econf "${myconf[@]}"
 }
+src_compile() {
+	set_arch_to_kernel
+
+	myemakeargs=(
+		CROSS_COMPILE="${CHOST}-"
+		HOSTCC="$(tc-getBUILD_CC)"
+		V=1
+	)
+
+	emake "${myemakeargs[@]}"
+}
 src_install() {
 	set_arch_to_kernel
 	 myemakeargs+=(
