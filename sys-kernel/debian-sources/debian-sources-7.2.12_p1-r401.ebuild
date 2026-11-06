@@ -17,9 +17,9 @@ SRC_URI="
 https://deb.debian.org/debian/pool/main/l/linux/linux_7.2.12-1.debian.tar.xz -> linux_7.2.12-1.debian.tar.xz
 https://mirrors.edge.kernel.org/pub/linux/kernel/v7.x/linux-7.2.12.tar.xz -> linux-7.2.12.tar.xz"
 LICENSE="GPL-2"
-SLOT="forky/7.2.12_p1"
+SLOT="forky/7.2"
 KEYWORDS="*"
-IUSE="acpi-ec binary btrfs custom-cflags dracut ec2 +logo luks lvm mdadm savedconfig sshd sign-modules zfs"
+IUSE="acpi-ec binary btrfs custom-cflags dracut ec2 +logo +symlink luks lvm mdadm savedconfig sshd sign-modules zfs"
 REQUIRED_USE="binary? (
 	^^ ( dracut )
 	btrfs? ( dracut )
@@ -32,9 +32,7 @@ dracut? ( binary )
 sshd? ( binary )
 "
 RESTRICT="binchecks strip"
-BDEPEND="# Build-time only. Available from src_prepare through
-	# pkg_postinst, then dep-cleanable. Not needed at runtime.
-	virtual/libelf
+BDEPEND="virtual/libelf
 	sys-apps/gawk
 	binary? (
 		app-admin/whip
@@ -52,7 +50,7 @@ RDEPEND="btrfs? ( sys-fs/btrfs-progs )
 	mdadm? ( sys-fs/mdadm )
 	
 "
-S="${WORKDIR}/linux-${KERNEL_TRIPLET}"
+S="${WORKDIR}/linux-7.2.12"
 # Helper functions
 get_patch_list() {
 	[[ -z "${1}" ]] && die "No patch series file specified"
@@ -79,7 +77,6 @@ tweak_config() {
 			;;
 	esac
 }
-
 get_vendor() {
 	vendor_string=$(grep vendor /proc/cpuinfo | uniq | cut -d ':' -f 2)
 	vendor=$([[ ${vendor_string^^} =~ (INTEL)|(AMD) ]] && echo ${BASH_REMATCH[0]})
@@ -212,13 +209,19 @@ src_prepare() {
 				# CONFIG_MNATIVE_AMD) to the same "native" key, causing last-write-wins collisions.
 				# Those are handled separately by the vendor-detection fallback below.
 				declare -A MARCH_MAP
+				MCFG=""
 				while IFS= read -r line; do
-					cfg=$(echo "$line" | grep -oP 'CONFIG_M[A-Z0-9_]+')
-					mch=$(echo "$line" | sed 's/.*-march=//;s/[[:space:]].*//')
-					# Skip "native" — handled by vendor detection
-					[[ "$mch" == "native" ]] && continue
-					[ -n "$cfg" ] && [ -n "$mch" ] && MARCH_MAP[$mch]=$cfg
-				done < <(grep -E '^\s+cflags-\$\(CONFIG_M' arch/x86/Makefile | grep 'march=')
+					case "$line" in
+						*'ifdef CONFIG_M'*|*'cflags-$(CONFIG_M'*)
+							MCFG=$(echo "$line" | grep -oP 'CONFIG_M[A-Z0-9_]+')
+							;;
+					esac
+					if [[ "$line" == *-march=* ]]; then
+						mch=$(echo "$line" | sed 's/.*-march=//;s/[[:space:]].*//')
+						[[ "$mch" == "native" ]] && continue
+						[ -n "$MCFG" ] && [ -n "$mch" ] && MARCH_MAP[$mch]=$MCFG
+					fi
+				done < arch/x86/Makefile
 
 				# Extract subarch from -march=subarch
 				SUBARCH=$(echo "$MARCH" | sed 's/.*-march=//')
@@ -407,7 +410,6 @@ src_install() {
 pkg_postinst() {
 	# Ensure that /boot is mounted in this phase
 	ego_pkg_preinst
-
 	# Back up existing initramfs as .old before generating a new one
 	# (matches kernel backup pattern: vmlinuz, System.map, config)
 	if use binary && use dracut; then
@@ -468,12 +470,11 @@ pkg_postinst() {
 		KMODDIR="/lib/modules/$MOD_DIR_NAME" \
 		whip h initramfs.generate_with_dracut || ewarn "whip initramfs generation failed (non-fatal)"
 	fi
-
-	if use binary && [[ -h /usr/src/linux ]]; then
+	if use symlink && use binary && [[ -h /usr/src/linux ]]; then
 		rm /usr/src/linux || die
 	fi
 
-	if use binary && [[ ! -e /usr/src/linux ]]; then
+	if use symlink && use binary && [[ ! -e /usr/src/linux ]]; then
 		ewarn "With binary use flag enabled /usr/src/linux"
 		ewarn "symlink automatically set to debian kernel"
 		ewarn "If you have external modules, don't forget to rebuild them with:"
